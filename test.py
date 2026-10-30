@@ -138,6 +138,7 @@ class PiperWorker(QThread):
                 sys.executable, "-m", "piper",
                 "-m", PIPER_MODEL,
                 "-f", self.output_path,
+                "--length-scale", os.getenv("PIPER_LENGTH_SCALE", "0.9"),
                 "--", self.text_to_speak,
             ]
             result = subprocess.run(
