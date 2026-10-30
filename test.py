@@ -22,7 +22,7 @@ from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 # ---------------- CONFIGURATION ----------------
 # Set GEMINI_API_KEY in your Windows environment before running this app.
 API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 # This voice name works with Piper versions that support downloaded voice names.
 # If you have a local model file, set PIPER_MODEL to its full .onnx path and
