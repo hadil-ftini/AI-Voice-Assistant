@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import random
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -30,6 +31,24 @@ MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 PIPER_MODEL = os.getenv("PIPER_MODEL", "en_US-lessac-medium").strip()
 
 client = genai.Client(api_key=API_KEY) if API_KEY else None
+
+
+def prepare_text_for_speech(text):
+    text = re.sub(r"```[^\n]*\n?", "", text)
+    text = text.replace("```", "")
+    text = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*(.+?)\s*#*\s*$", r"\1.", text)
+    text = re.sub(r"(?m)^\s{0,3}>\s?", "", text)
+    text = re.sub(r"(?m)^\s*(?:[-+*]|\d+[.)])\s+", "", text)
+    text = re.sub(r"(?m)^\s*\|?(?:[\s:-]+\|)+[\s:-]*$", "", text)
+    text = text.replace("|", ", ")
+    text = re.sub(r"(`+)(.*?)\1", r"\2", text, flags=re.DOTALL)
+    text = re.sub(r"(\*\*|__|~~)(.+?)\1", r"\2", text, flags=re.DOTALL)
+    text = re.sub(r"(?<!\w)([*_])(.+?)\1(?!\w)", r"\2", text, flags=re.DOTALL)
+    text = re.sub(r"[#*~`]", "", text).replace("_", " ")
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip()
 
 
 # ---------------- GEMINI WORKER ----------------
@@ -362,9 +381,11 @@ class GeminiApp(QWidget):
 
     # Piper speech
     def speak_response(self):
-        text_to_speak = self.answer_output.toPlainText().strip()
+        text_to_speak = prepare_text_for_speech(self.answer_output.toPlainText())
         if not text_to_speak:
-            QMessageBox.information(self, "No response", "There is no response to read aloud yet.")
+            QMessageBox.information(
+                self, "No response", "There is no readable response to read aloud yet."
+            )
             return
         if self.piper_worker is not None and self.piper_worker.isRunning():
             return
